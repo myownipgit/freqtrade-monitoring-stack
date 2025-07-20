@@ -1,0 +1,140 @@
+version: '3.8'
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+  freqtrade_data: {}
+
+networks:
+  monitoring:
+    driver: bridge
+  trading:
+    driver: bridge
+    internal: true
+
+services:
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+      - trading
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=freqtrade2024!
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
+      - GF_FEATURE_TOGGLES_ENABLE=ngAlertInterface
+    depends_on:
+      prometheus:
+        condition: service_healthy
+
+  # First Freqtrade bot instance (API only for metrics)
+  freqtrade-bot1:
+    image: freqtradeorg/freqtrade:stable
+    container_name: freqtrade-bot1
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:8080"
+    networks:
+      - trading
+    volumes:
+      - ./freqtrade/user_data:/freqtrade/user_data
+      - freqtrade_data:/freqtrade/data
+    environment:
+      - FREQTRADE_USER_DATA_DIR=/freqtrade/user_data
+    command: >
+      webserver
+      --config /freqtrade/user_data/config_webserver.json
+
+  # Mock FTMetric exporter for demo
+  ftmetric-bot1:
+    image: python:3.11-slim
+    container_name: ftmetric-bot1
+    restart: unless-stopped
+    ports:
+      - "8091:8090"
+    networks:
+      - monitoring
+      - trading
+    volumes:
+      - ./mock-ftmetric.py:/app/mock-ftmetric.py
+    working_dir: /app
+    command: python mock-ftmetric.py
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8090/health')"]
+      interval: 30s
+
+  # Second Freqtrade bot instance (optional)
+  freqtrade-bot2:
+    image: freqtradeorg/freqtrade:stable
+    container_name: freqtrade-bot2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8082:8080"
+    networks:
+      - trading
+    volumes:
+      - ./freqtrade/user_data:/freqtrade/user_data
+      - freqtrade_data:/freqtrade/data
+    environment:
+      - FREQTRADE_USER_DATA_DIR=/freqtrade/user_data
+    command: >
+      trade
+      --logfile /freqtrade/user_data/logs/freqtrade-bot2.log
+      --db-url sqlite:////freqtrade/user_data/tradesv3_bot2.sqlite
+      --config /freqtrade/user_data/config_bot2.json
+      --strategy ConservativeStrategy
+    profiles:
+      - multi-bot
+
+  # FTMetric exporter for bot2
+  ftmetric-bot2:
+    image: ghcr.io/kamontat/ftmetric:v4.5.3
+    container_name: ftmetric-bot2
+    restart: unless-stopped
+    ports:
+      - "8092:8090"
+    networks:
+      - monitoring
+      - trading
+    environment:
+      - FTH_FREQTRADE__URL=http://freqtrade-bot2:8080
+      - FTH_FREQTRADE__USERNAME=freqtrader
+      - FTH_FREQTRADE__PASSWORD=SuperSecret2!
+      - FTH_METRIC__PREFIX=freqtrade_bot2
+    depends_on:
+      - freqtrade-bot2
+    profiles:
+      - multi-bot

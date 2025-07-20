@@ -1,0 +1,36 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'freqtrade-monitoring'
+
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Freqtrade Bot 1 Metrics
+  - job_name: 'freqtrade-bot1'
+    static_configs:
+      - targets: ['ftmetric-bot1:8090']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+
+  # Freqtrade Bot 2 Metrics (if using multi-bot profile)
+  - job_name: 'freqtrade-bot2'
+    static_configs:
+      - targets: ['ftmetric-bot2:8090']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093

@@ -1,0 +1,194 @@
+{
+  "id": null,
+  "uid": "freqtrade-trading-overview",
+  "title": "Freqtrade Trading Overview",
+  "tags": ["freqtrade", "trading"],
+  "timezone": "browser",
+  "schemaVersion": 30,
+  "version": 1,
+  "refresh": "30s",
+  "fiscalYearStartMonth": 0,
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "panels": [
+    {
+      "id": 1,
+      "title": "Bot Status",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "freqtrade_build_info",
+          "legendFormat": "Bot Status",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "green", "value": 1}
+            ]
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {"text": "Down"},
+                "1": {"text": "Up"}
+              },
+              "type": "value"
+            }
+          ]
+        }
+      },
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+    },
+    {
+      "id": 2,
+      "title": "Open Trades",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "freqtrade_open_trades",
+          "legendFormat": "Open Trades",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 3},
+              {"color": "red", "value": 5}
+            ]
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
+    },
+    {
+      "id": 3,
+      "title": "Current Balance",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "freqtrade_fiat_balance",
+          "legendFormat": "Balance",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 500},
+              {"color": "green", "value": 1000}
+            ]
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
+    },
+    {
+      "id": 4,
+      "title": "Lock Count",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "freqtrade_lock_count",
+          "legendFormat": "Locks",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 1},
+              {"color": "red", "value": 3}
+            ]
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
+    },
+    {
+      "id": 5,
+      "title": "Cache Statistics",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(freqtrade_internal_cache_total[5m])",
+          "legendFormat": "Cache Total",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(freqtrade_internal_cache_miss[5m])",
+          "legendFormat": "Cache Miss",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+    },
+    {
+      "id": 6,
+      "title": "Log Levels Over Time",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(freqtrade_log_level_count[5m])",
+          "legendFormat": "Log Rate",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "logs/sec",
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [],
+  "graphTooltip": 0,
+  "editable": true
+}

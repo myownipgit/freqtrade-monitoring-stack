@@ -1,0 +1,31 @@
+{
+    "dry_run": true,
+    "dry_run_wallet": 1000,
+    "stake_currency": "USDT",
+    "stake_amount": 100,
+    "fiat_display_currency": "USD",
+    
+    "exchange": {
+        "name": "binance",
+        "key": "",
+        "secret": "",
+        "pair_whitelist": ["BTC/USDT", "ETH/USDT"],
+        "pair_blacklist": []
+    },
+    
+    "api_server": {
+        "enabled": true,
+        "listen_ip_address": "0.0.0.0",
+        "listen_port": 8080,
+        "verbosity": "error",
+        "enable_openapi": false,
+        "jwt_secret_key": "something-random",
+        "CORS_origins": [],
+        "username": "freqtrader",
+        "password": "SuperSecret1!"
+    },
+    
+    "bot_name": "freqtrade-webserver",
+    "dataformat_ohlcv": "json",
+    "dataformat_trades": "jsongz"
+}

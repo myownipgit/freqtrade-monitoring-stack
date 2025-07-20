@@ -1,0 +1,11 @@
+*.log
+*.sqlite
+.env
+user_data/logs/*
+user_data/data/*
+prometheus_data/
+grafana_data/
+freqtrade_data/
+.DS_Store
+__pycache__/
+*.pyc
