@@ -43,11 +43,32 @@ git clone https://github.com/yourusername/freqtrade-monitoring-stack.git
 cd freqtrade-monitoring-stack
 ```
 
-### 2. Start the Stack
+### 2. Choose Your Deployment
 
+#### Option A: Freqtrade Monitoring Only (Default)
 ```bash
-# Start all services
-docker-compose up -d
+# Start trading bot monitoring
+./deploy.sh install
+```
+
+#### Option B: Multi-Bot Trading Setup
+```bash
+# Start with multiple bot support
+./deploy.sh --profile multi-bot install
+```
+
+#### Option C: Cryptocurrency Market Tracking
+```bash
+# Start with crypto market dashboard
+./deploy.sh --profile crypto-tracker install
+```
+
+#### Option D: Everything Combined
+```bash
+# Start all services (trading + crypto tracking)
+./deploy.sh --profile multi-bot install
+./deploy.sh --profile crypto-tracker start
+```
 
 # Check service status
 docker-compose ps
@@ -55,17 +76,30 @@ docker-compose ps
 
 ### 3. Access Dashboards
 
+#### Freqtrade Monitoring
 - **Grafana Dashboard**: http://localhost:3000
   - Username: `admin`
   - Password: `freqtrade2024!`
 - **Prometheus Metrics**: http://localhost:9090
 - **Trading Dashboard**: http://localhost:3000/d/freqtrade-trading-overview
 
+#### Cryptocurrency Market Tracking (if crypto-tracker profile is used)
+- **Crypto Grafana**: http://localhost:3001
+  - Username: `admin`
+  - Password: `crypto2024!`
+- **Crypto Dashboard**: http://localhost:3001/d/crypto-overview
+- **Crypto Prometheus**: http://localhost:9091
+- **CoinMarketCap Data**: http://localhost:9101/metrics
+
 ## 📁 Project Structure
 
 ```
 freqtrade-monitoring-stack/
 ├── docker-compose.yml          # Main orchestration file
+├── deploy.sh                   # Main deployment script
+├── scripts/                    # Management scripts
+│   ├── config-manager.sh       # Configuration wizard
+│   └── maintenance.sh          # System maintenance
 ├── prometheus/
 │   └── prometheus.yml          # Metrics collection config
 ├── grafana/
@@ -73,6 +107,12 @@ freqtrade-monitoring-stack/
 │   │   ├── datasources/        # Prometheus datasource
 │   │   └── dashboards/         # Dashboard provisioning
 │   └── dashboards/             # Dashboard JSON files
+├── crypto-tracker/             # Cryptocurrency monitoring stack
+│   ├── prometheus/             # Crypto-specific Prometheus config
+│   ├── grafana/
+│   │   ├── provisioning/       # Crypto dashboard provisioning
+│   │   └── dashboards/         # Crypto-specific dashboards
+│   └── README.md               # Crypto tracker documentation
 ├── freqtrade/
 │   └── user_data/              # Bot configurations and strategies
 │       ├── config_*.json       # Trading bot configs
@@ -85,12 +125,20 @@ freqtrade-monitoring-stack/
 
 ## 🐳 Services
 
+### Freqtrade Monitoring Stack (Default)
 | Service | Port | Description |
 |---------|------|-------------|
-| **Grafana** | 3000 | Visualization dashboards |
-| **Prometheus** | 9090 | Metrics collection and storage |
+| **Grafana** | 3000 | Trading visualization dashboards |
+| **Prometheus** | 9090 | Trading metrics collection and storage |
 | **Freqtrade Bot** | 8081 | Trading bot API (localhost only) |
 | **FTMetric Exporter** | 8091 | Metrics exporter for Prometheus |
+
+### Cryptocurrency Tracker Stack (Optional)
+| Service | Port | Description |
+|---------|------|-------------|
+| **Crypto Grafana** | 3001 | Cryptocurrency market dashboards |
+| **Crypto Prometheus** | 9091 | Crypto metrics collection and storage |
+| **CoinMarketCap Exporter** | 9101 | Real-time crypto price data exporter |
 
 ## 🔧 Configuration
 

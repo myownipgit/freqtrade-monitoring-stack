@@ -4,6 +4,8 @@ volumes:
   prometheus_data: {}
   grafana_data: {}
   freqtrade_data: {}
+  crypto_prometheus_data: {}
+  crypto_grafana_data: {}
 
 networks:
   monitoring:
@@ -11,6 +13,8 @@ networks:
   trading:
     driver: bridge
     internal: true
+  crypto-monitoring:
+    driver: bridge
 
 services:
   # Prometheus for metrics collection
@@ -138,3 +142,71 @@ services:
       - freqtrade-bot2
     profiles:
       - multi-bot
+
+  # Crypto Currency Tracker Services
+  # Separate Prometheus instance for crypto data
+  crypto-prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: crypto-prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    networks:
+      - crypto-monitoring
+    volumes:
+      - ./crypto-tracker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - crypto_prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - crypto-tracker
+
+  # Mock CoinMarketCap data exporter for demo
+  coinmarketcap-exporter:
+    image: python:3.11-slim
+    container_name: coinmarketcap-exporter
+    restart: unless-stopped
+    ports:
+      - "9101:9101"
+    networks:
+      - crypto-monitoring
+    volumes:
+      - ./mock-crypto-exporter.py:/app/mock-crypto-exporter.py
+    working_dir: /app
+    command: python mock-crypto-exporter.py
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9101/health')"]
+      interval: 30s
+    profiles:
+      - crypto-tracker
+
+  # Separate Grafana instance for crypto tracking
+  crypto-grafana:
+    image: grafana/grafana:10.1.0
+    container_name: crypto-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    networks:
+      - crypto-monitoring
+    volumes:
+      - crypto_grafana_data:/var/lib/grafana
+      - ./crypto-tracker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./crypto-tracker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=crypto2024!
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel,grafana-worldmap-panel
+    depends_on:
+      crypto-prometheus:
+        condition: service_healthy
+    profiles:
+      - crypto-tracker

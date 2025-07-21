@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: 'crypto-dashboards'
+    orgId: 1
+    folder: 'Cryptocurrency'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

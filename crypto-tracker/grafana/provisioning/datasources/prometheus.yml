@@ -1,0 +1,14 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus-Crypto
+    type: prometheus
+    access: proxy
+    url: http://crypto-prometheus:9090
+    isDefault: true
+    editable: true
+    basicAuth: false
+    jsonData:
+      httpMethod: GET
+      timeInterval: "30s"
+    version: 1
